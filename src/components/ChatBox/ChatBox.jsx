@@ -1,5 +1,6 @@
 import './ChatBox.css';
 import assets from '../../assets/assets';
+import upload from '../../lib//upload';
 import { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 import {
@@ -42,7 +43,6 @@ const ChatBox = () => {
             );
             userChatData.chatsData[chatIndex].lastMessage = input.slice(0, 30);
             userChatData.chatsData[chatIndex].updatedAt = Date.now();
-
             if (userChatData.chatsData[chatIndex].rId === userData.id) {
               userChatData.chatsData[chatIndex].messageSeen = false;
             }
@@ -55,6 +55,59 @@ const ChatBox = () => {
     } catch (error) {
       console.error(error);
       toast.error(error.message);
+    }
+    setInput('');
+  };
+
+  const sendImage = async (e) => {
+    try {
+      const fileUrl = await upload(e.target.files[0]);
+
+      if (fileUrl && messagesId) {
+        await updateDoc(doc(db, 'messages', messagesId), {
+          messages: arrayUnion({
+            sId: userData.id,
+            image: fileUrl,
+            createdAt: new Date(),
+          }),
+        });
+        const userIDs = [chatUser.rId, userData.id];
+
+        userIDs.forEach(async (id) => {
+          const userChatsRef = doc(db, 'chats', id);
+          const userChatsSnapshot = await getDoc(userChatsRef);
+
+          if (userChatsSnapshot.exists()) {
+            const userChatData = userChatsSnapshot.data();
+            const chatIndex = userChatData.chatsData.findIndex(
+              (c) => c.messagesId === messagesId
+            );
+            userChatData.chatsData[chatIndex].lastMessage = 'Image';
+            userChatData.chatsData[chatIndex].updatedAt = Date.now();
+            if (userChatData.chatsData[chatIndex].rId === userData.id) {
+              userChatData.chatsData[chatIndex].messageSeen = false;
+            }
+            await updateDoc(userChatsRef, {
+              chatsData: userChatData.chatsData,
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message);
+    }
+  };
+
+  const convertTimestamp = (timestamp) => {
+    let date = timestamp.toDate();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+
+    if (hour > 12) {
+      return hour - 12 + ':' + minute + ' PM';
+    } else {
+      return hour + ':' + minute + ' AM';
     }
   };
 
@@ -83,31 +136,25 @@ const ChatBox = () => {
       </div>
 
       <div className='chat-msg'>
-        <div className='s-msg'>
-          <p className='msg'>
-            Lorem ipsum, dolor sit amet consectetur adipisicing...
-          </p>
-          <div>
-            <img src={assets.profile_img} alt='img pic' />
-            <p>2:30 PM</p>
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={msg.sId === userData.id ? 's-msg' : 'r-msg'}
+          >
+            <p className='msg'>{msg.text}</p>
+            <div>
+              <img
+                src={
+                  msg.sId === userData.id
+                    ? userData.avatar
+                    : chatUser.userData.avatar
+                }
+                alt='img pic'
+              />
+              <p>{convertTimestamp(msg.createdAt)}</p>
+            </div>
           </div>
-        </div>
-        <div className='s-msg'>
-          <img src={assets.pic1} alt='pic img' className='msg-img' />
-          <div>
-            <img src={assets.profile_img} alt='img pic' />
-            <p>2:30 PM</p>
-          </div>
-        </div>
-        <div className='r-msg'>
-          <p className='msg'>
-            Lorem ipsum, dolor sit amet consectetur adipisicing...
-          </p>
-          <div>
-            <img src={assets.profile_img} alt='img pic' />
-            <p>2:30 PM</p>
-          </div>
-        </div>
+        ))}
       </div>
 
       <div className='chat-input'>
@@ -117,11 +164,17 @@ const ChatBox = () => {
           type='text'
           placeholder='Send a message'
         />
-        <input type='file' id='image' accept='image/png, image/jpeg' hidden />
+        <input
+          onChange={sendImage}
+          type='file'
+          id='image'
+          accept='image/png, image/jpeg'
+          hidden
+        />
         <label htmlFor='image'>
           <img src={assets.gallery_icon} alt='icon pic' />
         </label>
-        <img src={assets.send_button} alt='icon pic' />
+        <img onClick={sendMessage} src={assets.send_button} alt='icon pic' />
       </div>
     </div>
   ) : (
