@@ -68,6 +68,12 @@ const AppContextProvider = (props) => {
     chatData,
     setChatData,
     loadUserData,
+    messages,
+    setMessages,
+    messagesId,
+    setMessagesId,
+    chatUser,
+    setChatUser,
   };
 
   return (
