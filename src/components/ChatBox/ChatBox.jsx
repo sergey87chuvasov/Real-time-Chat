@@ -141,7 +141,12 @@ const ChatBox = () => {
             key={index}
             className={msg.sId === userData.id ? 's-msg' : 'r-msg'}
           >
-            <p className='msg'>{msg.text}</p>
+            {msg['image'] ? (
+              <img className='msg-img' src={msg.image} alt='img pic' />
+            ) : (
+              <p className='msg'>{msg.text}</p>
+            )}
+
             <div>
               <img
                 src={
