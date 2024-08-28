@@ -1,30 +1,61 @@
 import './RightSidebar.css';
 import assets from '../../assets/assets';
 import { logout } from '../../config/firebase';
+import { useContext, useEffect, useState } from 'react';
+import { AppContext } from '../../context/AppContext';
 
 const RightSidebar = () => {
-  return (
+  const { chatUser, messages } = useContext(AppContext);
+
+  const [msgImages, setMsgImages] = useState([]);
+
+  useEffect(() => {
+    let temVar = [];
+
+    messages.map((msg) => {
+      if (msg.image) {
+        temVar.push(msg.image);
+      }
+    });
+
+    // console.log(temVar);
+    setMsgImages(temVar);
+  }, [messages]);
+
+  return chatUser ? (
     <div className='rs'>
       <div className='rs-profile'>
-        <img src={assets.profile_img} alt='profile img' />
+        <img src={chatUser.userData.avatar} alt='profile img' />
         <h3>
-          Ricard Sanford{' '}
+          {chatUser.userData.name}{' '}
           <img src={assets.green_dot} alt='img pic' className='dot' />
         </h3>
-        <p>Hey, There i am Ricard Sanford using chat app</p>
+        <p>{chatUser.userData.bio}</p>
       </div>
       <hr />
       <div className='rs-media'>
         <p>Media</p>
         <div>
-          <img src={assets.pic1} alt='img pic' />
+          {msgImages.map((url, index) => (
+            <img
+              onClick={() => window.open(url)}
+              key={index}
+              src={url}
+              alt='img pic'
+            />
+          ))}
+          {/* <img src={assets.pic1} alt='img pic' />
           <img src={assets.pic2} alt='img pic' />
           <img src={assets.pic3} alt='img pic' />
           <img src={assets.pic4} alt='img pic' />
           <img src={assets.pic5} alt='img pic' />
-          <img src={assets.pic6} alt='img pic' />
+          <img src={assets.pic6} alt='img pic' /> */}
         </div>
       </div>
+      <button onClick={() => logout()}>Logout</button>
+    </div>
+  ) : (
+    <div className='rs'>
       <button onClick={() => logout()}>Logout</button>
     </div>
   );
