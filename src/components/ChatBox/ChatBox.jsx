@@ -1,6 +1,6 @@
 import './ChatBox.css';
 import assets from '../../assets/assets';
-import upload from '../../lib//upload';
+import upload from '../../lib//upload.js';
 import { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 import {
@@ -14,8 +14,15 @@ import { db } from '../../config/firebase';
 import { toast } from 'react-toastify';
 
 const ChatBox = () => {
-  const { userData, messagesId, chatUser, messages, setMessages } =
-    useContext(AppContext);
+  const {
+    userData,
+    messagesId,
+    chatUser,
+    messages,
+    setMessages,
+    chatVisible,
+    setChatVisible,
+  } = useContext(AppContext);
 
   const [input, setInput] = useState('');
 
@@ -125,7 +132,7 @@ const ChatBox = () => {
   }, [messagesId]);
 
   return chatUser ? (
-    <div className='chat-box'>
+    <div className={`chat-box ${chatVisible ? '' : 'hidden'}`}>
       <div className='chat-user'>
         <img src={chatUser.userData.avatar} alt='img pic' />
         <p>
@@ -135,6 +142,12 @@ const ChatBox = () => {
           ) : null}{' '}
         </p>
         <img src={assets.help_icon} alt='help icon' className='help' />
+        <img
+          onClick={() => setChatVisible(false)}
+          src={assets.arrow_icon}
+          alt='icon pic'
+          className='arrow'
+        />
       </div>
 
       <div className='chat-msg'>
@@ -185,7 +198,7 @@ const ChatBox = () => {
       </div>
     </div>
   ) : (
-    <div className='chat-welcome'>
+    <div className={`chat-welcome ${chatVisible ? '' : 'hidden'}`}>
       <img src={assets.logo_icon} alt='logo icon' />
       <p>Chat anytime, anywhere</p>
     </div>
